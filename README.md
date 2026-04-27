@@ -27,8 +27,8 @@ pip install -r requirements.txt
 2. Вставьте туда свой ключ в формате:
    GIGACHAT_API_KEY=ваш_ключ_от_GigaChat
 
-### Запуск скрипта
-```
+### 3. Запуск скрипта
+```bash
 python pipeline.py
 ```
 Скрипт обработает файл reviews.csv и создаст (или обновит) файл results.csv с анализом каждого отзыва.
