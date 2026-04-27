@@ -56,9 +56,10 @@ def analyze_sentiment(text):
     }
     
     prompt = f"""
-    Проанализируй тональность следующего отзыва на русском языке.
-    Ответь ТОЛЬКО валидным JSON объектом без пояснений.
-    Формат: {{"sentiment": "positive/negative/neutral", "reason": "краткое объяснение"}}.
+    Проанализируй тональность следующего отзыва.
+    Ответь ТОЛЬКО валидным JSON объектом. Не пиши ничего кроме JSON.
+    Формат: {{"sentiment": "positive", "reason": "текст"}}
+    Значение sentiment может быть: positive, negative или neutral.
     
     Отзыв: "{text}"
     """
@@ -66,25 +67,28 @@ def analyze_sentiment(text):
     body = {
         "model": "GigaChat",
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.5
+        "temperature": 0.0 # Ставим 0, чтобы ответ был максимально строгим
     }
 
     response = requests.post(url, json=body, headers=headers, verify=False)
     
     if response.status_code == 200:
         result = response.json()['choices'][0]['message']['content']
+        
+        if "```" in result:
+            result = result.split("```")[1]
+            if result.startswith("json"):
+                result = result[4:]
+        
         try:
-            if "```" in result:
-                result = result.split("```")[1]
-                if "json" in result:
-                    result = result.replace("json", "", 1)
             return json.loads(result.strip())
         except:
-            print(f"Ошибка парсинга JSON: {result}")
-            return {"sentiment": "error", "reason": result}
+            print(f"  ❌ Нейросеть вернула некорректный JSON: {result}")
+            return {"sentiment": "unknown", "reason": "Парсинг не удался"}
     else:
-        print(f"Ошибка API: {response.status_code}")
-        return {"sentiment": "error", "reason": response.text}
+        print(f"  ❌ Ошибка API: {response.status_code}")
+        return None
+
 
 def main():
     print("1. Читаю входные данные (reviews.csv)...")
